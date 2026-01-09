@@ -1,0 +1,54 @@
+@startuml
+title UC3 - Créer le RQV du jour
+
+actor "Agent de police" as A
+boundary "Interface Web" as UI
+control "ControleurRQV" as CtrlRQV
+entity "ServiceRQV" as ServiceRQV
+database "DepotDeclaration" as RepoDecl
+database "DepotRQV" as RepoRQV
+
+' Accès à la fonctionnalité de création de RQV
+A -> UI : ouvrirCreationRQV()
+UI -> CtrlRQV : initialiserCreationRQV()
+CtrlRQV -> UI : afficherFormulaireRQV(dateParDefaut)
+UI --> A : afficherFormulaireRQV()
+
+' L'agent confirme ou choisit une date
+A -> UI : saisirDateRQV(dateChoisie)
+UI -> CtrlRQV : demanderCreationRQV(dateChoisie)
+
+' Validation de la date
+CtrlRQV -> ServiceRQV : creerRQV(dateChoisie)
+ServiceRQV -> ServiceRQV : verifierFormatDate(dateChoisie)
+
+alt Date invalide
+    ServiceRQV --> CtrlRQV : erreurDateInvalide()
+    CtrlRQV -> UI : afficherErreurDate()
+    UI --> A : afficherMessageErreur("Date invalide")
+else Date valide
+    ' Récupération des déclarations du jour
+    ServiceRQV -> RepoDecl : rechercherDeclarationsNouvelles(dateChoisie)
+    RepoDecl --> ServiceRQV : listeNouvelles
+
+    ServiceRQV -> RepoDecl : rechercherDeclarationsModifiees(dateChoisie)
+    RepoDecl --> ServiceRQV : listeModifiees
+
+    ServiceRQV -> RepoDecl : rechercherDeclarationsResolues(dateChoisie)
+    RepoDecl --> ServiceRQV : listeResolues
+
+    ' Construction du RQV (même si certaines listes sont vides)
+    ServiceRQV -> ServiceRQV : construireRQV(listeNouvelles,\nlisteModifiees,listeResolues)
+
+    ' Enregistrement du RQV
+    ServiceRQV -> RepoRQV : enregistrerRQV(RQV)
+    RepoRQV --> ServiceRQV : confirmationEnregistrement
+
+    ServiceRQV --> CtrlRQV : rqvCree(RQV)
+
+    ' Affichage du récapitulatif
+    CtrlRQV -> UI : afficherRecapRQV(RQV)
+    UI --> A : afficherRQVresumé()
+end
+
+@enduml

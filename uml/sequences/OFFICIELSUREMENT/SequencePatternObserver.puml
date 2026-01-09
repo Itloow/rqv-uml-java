@@ -1,0 +1,79 @@
+@startuml
+skinparam shadow false
+skinparam responseMessageBelowArrow true
+skinparam defaultFontName "Arial"
+skinparam defaultFontSize 12
+skinparam linetype polyline
+
+' --- STYLES MVC ---
+skinparam sequence {
+    LifeLineBorderColor #444444
+    ParticipantBorderColor #444444
+    ActorBorderColor #444444
+    
+    ' Couleurs des composants
+    ParticipantBackgroundColor<<Boundary>> #FEF9E7
+    ParticipantBackgroundColor<<Control>> #EBF5FB
+    ParticipantBackgroundColor<<Entity>> #E8F8F5
+}
+
+actor "Agent Policier" as Agent
+participant "Vue_SaisieObjet" as Vue <<Boundary>>
+participant "Controleur_Objets" as Ctrl <<Control>>
+participant "Gestionnaire_Notifications" as Subject <<Entity>>
+participant "Declaration_Vol" as Observer <<Entity>>
+actor "Victime" as Vic
+
+title Scénario : Enregistrement d'un objet et Notification (Pattern Observer)
+
+' 1. L'agent saisit l'objet
+Agent -> Vue : Remplir formulaire objet trouvé\n(Type, Couleur, Marque...)
+activate Vue
+Vue -> Ctrl : enregistrerObjet(detailsObjet)
+activate Ctrl
+
+' 2. Le controleur traite
+Ctrl -> Subject : ajouterObjetTrouve(detailsObjet)
+activate Subject
+
+    note right of Subject
+      <b>Sujet (Observable)</b>
+      L'ajout déclenche la méthode
+      de notification
+    end note
+
+    ' 3. Logique Observer : On cherche qui notifier
+    Subject -> Subject : rechercherCorrespondances(detailsObjet)
+    activate Subject #DarkSalmon
+    
+    note right
+      Filtrage basé sur :
+      Type, Couleur, Marque...
+    end note
+
+        ' Boucle sur les observateurs concernés
+        loop Pour chaque déclaration compatible
+            
+            Subject -> Observer : notifierCorrespondance(objet)
+            activate Observer
+            
+            ' 4. La déclaration prévient la victime
+            Observer -> Vic : Envoyer Email/SMS\n"Votre objet a peut-être été retrouvé"
+            
+            Observer --> Subject : Statut envoi (OK)
+            deactivate Observer
+            
+        end
+    
+    deactivate Subject
+    
+    Subject --> Ctrl : Confirmation enregistrement
+deactivate Subject
+
+Ctrl --> Vue : Afficher succès
+deactivate Ctrl
+
+Vue --> Agent : "Objet enregistré et victimes notifiées"
+deactivate Vue
+
+@enduml

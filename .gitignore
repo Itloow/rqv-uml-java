@@ -1,0 +1,19 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# Maven / Gradle
+target/
+build/
+.gradle/
+
+# OS
+.DS_Store
+Thumbs.db

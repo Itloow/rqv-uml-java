@@ -1,0 +1,154 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadow false
+skinparam linetype ortho
+skinparam defaultFontName "Segoe UI"
+
+' REGLAGES D'ESPACEMENT
+skinparam nodesep 100   
+skinparam ranksep 80   
+skinparam packagePadding 20
+
+' --- STYLES ---
+skinparam package {
+    BackgroundColor #F4F6F7
+    BorderColor #BDC3C7
+    FontColor #7F8C8D
+    FontSize 13
+    FontStyle bold
+}
+
+skinparam class {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+}
+
+' ==========================================
+' PACKAGE TECHNIQUE
+' ==========================================
+package "Pattern_Observer" {
+    interface "IObservateur" {
+        + update(objet : ObjetTrouve)
+    }
+
+    interface "ISujet" {
+        + enregistrerObs(o : IObservateur)
+        + supprimerObs(o : IObservateur)
+        + notifierObs(objet : ObjetTrouve)
+    }
+}
+
+' ==========================================
+' PACKAGE MODELE (DONNÉES)
+' ==========================================
+package "Modele" {
+
+    ' --- NOUVEAUTÉ : CLASSE MÈRE UTILISATEUR ---
+    abstract class Utilisateur {
+        - nom : String
+        - prenom : String
+    }
+
+    ' Declarant hérite de Utilisateur
+    class Declarant {
+        - numCNI : String
+        - adresse : String
+        - telephone : String
+    }
+
+    class ObjetTrouve {
+        - type : String
+        - marque : String
+        - couleur : String
+        - description : String
+    }
+
+    abstract class Declaration {
+        - id : int
+        - dateCreation : Date
+        - dateDerniereModif : Date
+        - estResolu : boolean
+        - roleDeclarant : String
+        - description : String
+        - couleur : String
+        - marque : String
+        
+        + editer(nouvellesInfos : String)
+        + validerSauvegarde()
+        + update(objet : ObjetTrouve)
+    }
+
+    class DeclarationVelo {
+        - numeroSerie : String
+        - estElectrique : boolean
+    }
+
+    class DeclarationVehicule {
+        - matricule : String
+        - modele : String
+    }
+
+    class RQV {
+        - dateRapport : Date
+        - listeNouvelles : List<Declaration>
+        - listeModifiees : List<Declaration>
+        - listeResolues : List<Declaration>
+    }
+}
+
+' ==========================================
+' PACKAGE CONTROLEUR (LOGIQUE)
+' ==========================================
+package "Controleur" {
+
+    ' AgentPolicier hérite aussi de Utilisateur
+    class AgentPolicier {
+        - matricule : String
+        - motDePasse : String
+        + sAuthentifier() : boolean
+    }
+
+    class GestionnaireSysteme {
+        - declarations : List<Declaration>
+        - objetsTrouves : List<ObjetTrouve>
+        
+        + creerDeclaration(d : Declaration, u : Declarant)
+        + genererRQV(date : Date) : RQV
+        + ajouterObjetTrouve(o : ObjetTrouve)
+        
+        + enregistrerObs(o : IObservateur)
+        + notifierObs(objet : ObjetTrouve)
+    }
+}
+
+' ==========================================
+' RELATIONS
+' ==========================================
+
+' 1. Héritage des Utilisateurs (NOUVEAU)
+Declarant -up-|> Utilisateur
+AgentPolicier -up-|> Utilisateur
+
+' 2. Héritage & Implémentation Métier
+DeclarationVelo -up-|> Declaration
+DeclarationVehicule -up-|> Declaration
+Declaration .up.|> IObservateur
+GestionnaireSysteme .up.|> ISujet
+
+' 3. Relations
+Declarant "1" -left- "0..*" Declaration : "Auteur"
+RQV "1" o-- "0..*" Declaration : "Contient"
+
+AgentPolicier -right-> GestionnaireSysteme : "Utilise"
+
+GestionnaireSysteme "1" *-- "*" Declaration : "Gère"
+GestionnaireSysteme "1" *-- "*" ObjetTrouve : "Gère"
+GestionnaireSysteme ..> RQV : "Fabrique"
+
+note bottom of Declaration
+  Update() vérifie la
+  correspondance.
+end note
+
+@enduml

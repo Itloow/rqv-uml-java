@@ -1,0 +1,38 @@
+@startuml
+title Séquence — Agent s’authentifie puis génère une RQV (par date)
+
+actor AgentPolicier as agent
+
+participant GestionnaireSysteme as gs
+participant RQV as rqv
+
+agent -> gs : sAuthentifier(matricule, motDePasse)
+activate gs
+
+alt Authentification OK
+  gs --> agent : true
+
+  agent -> gs : genererRQV(date)
+  create rqv
+  gs -> rqv : initialiser(date)
+  activate rqv
+
+  gs -> rqv : calculer(declarations)
+  note right of rqv
+  Remplit :
+  - listeNouvelles
+  - listeModifiees
+  - listeResolues
+  (sur la date demandée)
+  end note
+
+  rqv --> gs : rqv
+  deactivate rqv
+
+  gs --> agent : rqv
+else Authentification KO
+  gs --> agent : false
+end
+
+deactivate gs
+@enduml

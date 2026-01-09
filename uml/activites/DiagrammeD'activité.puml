@@ -1,0 +1,55 @@
+@startuml
+title Diagramme d'activité — Ajouter ObjetTrouvé + Notification (Observer)
+
+start
+
+partition "AgentPolicier" {
+  :Saisir infos de l'objet trouvé (objInfos);
+  :Valider l'envoi au système;
+}
+
+partition "GestionnaireSysteme <<Sujet>>" {
+  :Créer ObjetTrouve à partir de objInfos;
+  :Enregistrer l'objet trouvé;
+  :Récupérer la liste des observateurs (victimes);
+}
+
+if (Liste observateurs vide ?) then (oui)
+  partition "GestionnaireSysteme <<Sujet>>" {
+    :Fin (aucune victime à notifier);
+  }
+  stop
+else (non)
+  partition "GestionnaireSysteme <<Sujet>>" {
+    :Initialiser parcours des observateurs;
+  }
+
+  repeat
+    partition "GestionnaireSysteme <<Sujet>>" {
+      :Sélectionner la prochaine victime;
+      :Notifier la victime (update(obj));
+    }
+
+    partition "Victime <<Observateur>>" {
+      :VérifierCorrespondance(obj);
+    }
+
+    if (Correspondance trouvée ?) then (oui)
+      partition "GestionnaireSysteme <<Sujet>>" {
+        :Envoyer alerte à la victime;
+      }
+    else (non)
+      partition "GestionnaireSysteme <<Sujet>>" {
+        :Aucune alerte (continuer);
+      }
+    endif
+
+  repeat while (Encore des observateurs ?) is (oui)
+
+  partition "GestionnaireSysteme <<Sujet>>" {
+    :Fin des notifications;
+  }
+  stop
+endif
+
+@enduml

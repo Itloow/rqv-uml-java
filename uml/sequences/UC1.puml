@@ -1,0 +1,40 @@
+@startuml
+title UC1 - Créer une déclaration de vol
+
+actor "Victime / Témoin" as U
+boundary "Interface Web" as UI
+control "ControleurDeclaration" as Ctrl
+entity "ServiceDeclaration" as Service
+database "DepotDeclaration" as Repo
+
+' Demande de création
+U -> UI : demanderCreationDeclaration()
+UI -> Ctrl : creerDeclaration()
+
+' Affichage du formulaire
+Ctrl -> UI : afficherFormulaireDeclaration()
+
+' Saisie des informations
+U -> UI : saisirInfos(role, infosPersonnelles,\ninfosBien, infosVol)
+UI -> Ctrl : soumettreDeclaration(donneesDeclaration)
+
+' Validation métier
+Ctrl -> Service : validerEtCreerDeclaration(donneesDeclaration)
+Service -> Service : verifierChampsObligatoiresEtFormats()
+
+alt Champs manquants ou invalides
+    Service --> Ctrl : erreurValidation(erreurs)
+    Ctrl -> UI : afficherErreurs(erreurs)
+    UI --> U : afficherFormulaireAvecErreurs()
+else Validation OK
+    ' Enregistrement
+    Service -> Repo : enregistrerDeclaration(donneesDeclaration)
+    Repo --> Service : idDeclaration
+
+    ' Finalisation
+    Service --> Ctrl : declarationCreee(idDeclaration)
+    Ctrl -> UI : afficherConfirmation(idDeclaration)
+    UI --> U : afficherMessageSucces(idDeclaration)
+end
+
+@enduml

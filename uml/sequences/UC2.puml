@@ -1,0 +1,57 @@
+@startuml
+title UC2 - Modifier une déclaration de vol
+
+actor "Victime / Témoin" as U
+boundary "Interface Web" as UI
+control "ControleurDeclaration" as Ctrl
+entity "ServiceDeclaration" as Service
+database "DepotDeclaration" as Repo
+
+' Consultation de la liste des déclarations
+U -> UI : consulterDeclarations()
+UI -> Ctrl : listerDeclarations(utilisateurId)
+Ctrl -> Service : recupererDeclarations(utilisateurId)
+Service -> Repo : chercherDeclarationsParUtilisateur(utilisateurId)
+Repo --> Service : listeDeclarations
+Service --> Ctrl : listeDeclarations
+Ctrl -> UI : afficherListeDeclarations(listeDeclarations)
+UI --> U : afficherDeclarations()
+
+' Sélection d'une déclaration à modifier
+U -> UI : selectionnerDeclaration(idDeclaration)
+UI -> Ctrl : demanderModification(idDeclaration)
+Ctrl -> Service : recupererDeclaration(idDeclaration)
+Service -> Repo : chercherDeclarationParId(idDeclaration)
+Repo --> Service : declarationOuNull
+
+alt Déclaration introuvable
+    Service --> Ctrl : erreurDeclarationIntrouvable()
+    Ctrl -> UI : afficherMessageErreur("Déclaration introuvable")
+    UI --> U : afficherErreur()
+else Déclaration trouvée
+    Service --> Ctrl : declaration(declarationCourante)
+    Ctrl -> UI : afficherFormulaireEdition(declarationCourante)
+    UI --> U : afficherFormulaire()
+
+    ' Saisie des modifications
+    U -> UI : modifierInfos(declarationModifiee)
+    UI -> Ctrl : soumettreModifications(donneesMiseAJour)
+    Ctrl -> Service : validerEtMettreAJourDeclaration(donneesMiseAJour)
+    Service -> Service : verifierChampsObligatoiresEtFormats()
+
+    alt Champs manquants ou invalides
+        Service --> Ctrl : erreurValidation(erreurs)
+        Ctrl -> UI : afficherErreurs(erreurs)
+        UI --> U : afficherFormulaireAvecErreurs()
+    else Validation OK
+        Service -> Repo : mettreAJourDeclaration(donneesMiseAJour)
+        Repo --> Service : confirmationMiseAJour
+
+        ' (Mise à jour de la date de dernière modification faite ici)
+        Service --> Ctrl : modificationOK()
+        Ctrl -> UI : afficherConfirmationModification()
+        UI --> U : afficherMessageSucces()
+    end
+end
+
+@enduml

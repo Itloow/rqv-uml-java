@@ -1,0 +1,55 @@
+@startuml
+' --- COMMANDE MAGIQUE POUR EVITER L'ERREUR ---
+allow_mixing
+
+skinparam shadow false
+skinparam defaultFontName "Segoe UI"
+skinparam linetype polyline
+
+' --- STYLES ---
+skinparam object {
+    BackgroundColor White
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 13
+    FontStyle bold
+}
+
+skinparam actor {
+    BackgroundColor White
+    BorderColor #2C3E50
+}
+
+skinparam note {
+    BackgroundColor #FEF9E7
+    BorderColor #F1C40F
+}
+
+title Diagramme de Communication : Scénario Notification (Observer)
+
+' --- 1. LES INSTANCES ---
+actor ": AgentPolicier" as Agent
+object ": GestionnaireSysteme" as Systeme
+object "nouvelObjet : ObjetTrouve" as Objet
+object "d1 : DeclarationVelo" as Decl1
+object "d2 : DeclarationVehicule" as Decl2
+
+' --- 2. LES LIENS ET MESSAGES ---
+' La syntaxe : Lien : Message >
+
+Agent -- Systeme : 1: ajouterObjetTrouve(o) >
+
+' Le système crée l'objet
+Systeme -right- Objet : 1.1: <<create>> >
+
+' Le système notifie les observateurs
+Systeme -down-> Decl1 : 1.2: notifierObs(o) \n 1.2.1: update(o) >
+Systeme -down-> Decl2 : 1.2: notifierObs(o) \n 1.2.1: update(o) >
+
+' Note explicative
+note bottom of Systeme
+  Le Gestionnaire (Sujet) parcourt sa liste
+  et notifie chaque déclaration (Observateur).
+end note
+
+@enduml
