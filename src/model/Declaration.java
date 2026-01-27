@@ -1,8 +1,9 @@
 package model;
+import pattern_observer.IObservateur;
 
 import java.util.Date;
 
-public abstract class Declaration {
+public abstract class Declaration implements IObservateur{
 
     protected int id;
     protected Date dateCreation;
@@ -74,5 +75,23 @@ public abstract class Declaration {
         this.etat = EtatDeclaration.RESOLUE;
         this.dateResolution = new Date();
         this.dateDerniereModif = new Date();
+    }
+
+    /**
+     * Vérifie si un objet trouvé correspond à cette déclaration.
+     */
+    public boolean correspondA(ObjetTrouve objet) {
+        boolean memeCouleur = this.couleur.equalsIgnoreCase(objet.getCouleur());
+        boolean memeMarque = this.marque.equalsIgnoreCase(objet.getMarque());
+
+        return memeCouleur && memeMarque;
+    }
+
+    /**
+     * Méthode du patron Observer, appelée quand un objet correspond.
+     */
+    public void update(ObjetTrouve objet) {
+        System.out.println("Notification : Un objet correspondant a été trouvé !");
+        System.out.println("Type: " + objet.getType() + ", Couleur: " + objet.getCouleur());
     }
 }
